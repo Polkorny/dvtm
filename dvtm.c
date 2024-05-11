@@ -1076,10 +1076,12 @@ create(const char *args[]) {
 
 	if (args && args[0]) {
 		c->cmd = args[0];
-		char name[PATH_MAX];
-		strncpy(name, args[0], sizeof(name));
-		name[sizeof(name)-1] = '\0';
+		char *name = NULL;
+		name = malloc(strlen(args[0])+1);
+		strcpy(name, args[0]);
+		name[strlen(name)+1] = '\0';
 		strncpy(c->title, basename(name), sizeof(c->title));
+		free(name);
 	} else {
 		c->cmd = shell;
 	}
