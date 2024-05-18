@@ -17,13 +17,13 @@
  */
 #include <stdlib.h>
 #include <stdint.h>
+#include <signal.h>
 #include <unistd.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <langinfo.h>
 #include <limits.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -31,6 +31,7 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <termios.h>
+#include <signal.h>
 #include <wchar.h>
 #if defined(__linux__) || defined(__CYGWIN__)
 # include <pty.h>
@@ -1583,6 +1584,13 @@ void vt_noscroll(Vt *t)
 		vt_scroll(t, scroll_below);
 }
 
+static void reset_sigdfl()
+{
+	int signum;
+	for (signum = 0; signum != _NSIG; ++signum)
+		signal(signum, SIG_DFL);
+}
+
 pid_t vt_forkpty(Vt *t, const char *p, const char *argv[], const char *cwd, const char *env[], int *to, int *from)
 {
 	int vt2ed[2], ed2vt[2];
@@ -1648,6 +1656,7 @@ pid_t vt_forkpty(Vt *t, const char *p, const char *argv[], const char *cwd, cons
 		sa.sa_handler = SIG_DFL;
 		sigaction(SIGPIPE, &sa, NULL);
 
+		reset_sigdfl();
 		execvp(p, (char *const *)argv);
 		fprintf(stderr, "\nexecv() failed.\nCommand: '%s'\n", argv[0]);
 		exit(1);
